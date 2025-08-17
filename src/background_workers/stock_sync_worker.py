@@ -1,0 +1,2 @@
+class StockSyncWorker:
+    pass
