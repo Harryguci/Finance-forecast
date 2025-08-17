@@ -19,10 +19,10 @@ logger = logging.getLogger(__name__)
 class StockSyncWorkerConfig:
     provider: str = "yahoo"
     frequency_minutes: int = 5
-    hour_start: int = 9
+    hour_start: int = 0
     hour_end: int = 16
-    except_days: str = "sat,sun"
-    stock_symbols: List[str] = field(default_factory=lambda: ["FPT.VN"])
+    except_days: str = "none"
+    stock_symbols: List[str] = field(default_factory=lambda: ["FPT.VN", "GOOG"])
 
 class StockSyncWorker:
     """
@@ -156,6 +156,7 @@ class StockSyncWorker:
     
     async def _sync_all_stocks(self):
         """Sync data for all configured stock symbols."""
+        logger.info("=== _sync_all_stocks method called ===")
         if not self._is_trading_time():
             logger.debug("Outside trading hours, skipping stock sync")
             return
@@ -218,13 +219,19 @@ class StockSyncWorker:
         """Main sync loop that runs in the worker thread."""
         logger.info("Stock sync worker started")
         
+        # Schedule the sync job once at startup using a lambda to capture self
+        schedule.every(self.config.frequency_minutes).minutes.do(
+            lambda: self._run_sync_job()
+        )
+        
+        logger.info(f"Scheduled stock sync every {self.config.frequency_minutes} minutes")
+        
+        # Add immediate execution for testing
+        logger.info("Running initial sync job immediately for testing...")
+        self._run_sync_job()
+        
         while not self.stop_event.is_set():
             try:
-                # Schedule the sync job
-                schedule.every(self.config.frequency_minutes).minutes.do(
-                    lambda: asyncio.run(self._sync_all_stocks())
-                )
-                
                 # Run pending scheduled jobs
                 schedule.run_pending()
                 
@@ -236,6 +243,28 @@ class StockSyncWorker:
                 time_module.sleep(5)  # Wait before retrying
         
         logger.info("Stock sync worker stopped")
+    
+    def _run_sync_job(self):
+        """Wrapper method to run the async sync job in the worker thread."""
+        logger.info("=== _run_sync_job method called ===")
+        try:
+            # Create a new event loop for this thread if it doesn't exist
+            try:
+                loop = asyncio.get_event_loop()
+                logger.debug("Using existing event loop")
+            except RuntimeError:
+                logger.debug("Creating new event loop for this thread")
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+            
+            logger.info("About to run _sync_all_stocks...")
+            # Run the sync job
+            loop.run_until_complete(self._sync_all_stocks())
+            logger.info("=== _run_sync_job completed successfully ===")
+        except Exception as e:
+            logger.error(f"Error running sync job: {str(e)}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
     
     def start(self):
         """Start the background worker."""
@@ -275,6 +304,16 @@ class StockSyncWorker:
     
     def get_status(self) -> Dict[str, Any]:
         """Get the current status of the worker."""
+        # Get the next scheduled run time
+        next_run = None
+        try:
+            jobs = schedule.get_jobs()
+            if jobs:
+                next_run = jobs[0].next_run.isoformat() if hasattr(jobs[0], 'next_run') else "Unknown"
+        except Exception as e:
+            logger.debug(f"Could not get next run time: {e}")
+            next_run = "Unknown"
+        
         return {
             "is_running": self.is_running,
             "is_alive": self.is_alive(),
@@ -287,7 +326,9 @@ class StockSyncWorker:
                 "stock_symbols": self.config.stock_symbols
             },
             "trading_time": self._is_trading_time(),
-            "next_sync": f"Every {self.config.frequency_minutes} minutes during trading hours"
+            "next_sync": f"Every {self.config.frequency_minutes} minutes during trading hours",
+            "next_run_time": next_run,
+            "scheduled_jobs_count": len(schedule.get_jobs()) if hasattr(schedule, 'get_jobs') else 0
         }
     
     def get_sync_statistics(self, days: int = 30) -> Dict[str, Any]:
@@ -298,6 +339,45 @@ class StockSyncWorker:
         """Get historical stock data for a specific symbol."""
         return self.stock_data_service.get_stock_data_history(symbol, limit)
     
+    def trigger_manual_sync(self):
+        """Manually trigger a sync operation for testing/debugging."""
+        logger.info("Manual sync triggered")
+        try:
+            # Create a new event loop for this thread if it doesn't exist
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+            
+            # Run the sync job
+            loop.run_until_complete(self._sync_all_stocks())
+            logger.info("Manual sync completed successfully")
+        except Exception as e:
+            logger.error(f"Error in manual sync: {str(e)}")
+            raise
+    
     def get_recent_sync_logs(self, limit: int = 50) -> List[Any]:
         """Get recent sync log entries."""
         return self.stock_data_service.get_sync_logs(limit)
+    
+    def debug_schedule(self):
+        """Debug method to check schedule status."""
+        logger.info("=== Schedule Debug Info ===")
+        try:
+            jobs = schedule.get_jobs()
+            logger.info(f"Total scheduled jobs: {len(jobs)}")
+            
+            for i, job in enumerate(jobs):
+                logger.info(f"Job {i+1}: {job}")
+                if hasattr(job, 'next_run'):
+                    logger.info(f"  Next run: {job.next_run}")
+                if hasattr(job, 'at_time'):
+                    logger.info(f"  At time: {job.at_time}")
+                if hasattr(job, 'interval'):
+                    logger.info(f"  Interval: {job.interval}")
+                    
+        except Exception as e:
+            logger.error(f"Error getting schedule info: {e}")
+        
+        logger.info("=== End Schedule Debug ===")

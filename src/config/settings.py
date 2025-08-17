@@ -51,13 +51,16 @@ class Settings(BaseSettings):
     
     # Stock sync worker settings
     frequency_minutes: int = 5
-    hour_start: int = 9
-    hour_end: int = 16
-    except_days: str = "sat,sun"
+    hour_start: int = 0
+    hour_end: int = 23
+    except_days: str = "none"
     
     # Yahoo Finance settings
     yahoo_finance_base_url: str = "https://finance.yahoo.com"
     
+    # stock symbols
+    stock_symbols: List[str] = ["FPT.VN", "GOOG"]
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
