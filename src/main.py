@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from src.database.connection import close_db, init_db
 from src.routers.yahoo_stock_routes import router as yahoo_router
 from src.routers.sync_stock_routers import router as sync_stock_router
+from src.routers.stock_viewer_routers import router as stock_viewer_router
 from src.config.settings import settings
 from src.config.logging_config import get_logger, setup_logging
 
@@ -50,6 +51,7 @@ app = FastAPI(
 # Include routers
 app.include_router(yahoo_router)
 app.include_router(sync_stock_router)
+app.include_router(stock_viewer_router)
 
 @app.get("/")
 async def root():

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stock Data Viewer</title>
+    <link rel="stylesheet" href="/stock-viewer/static/css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/date-fns@2.29.3/index.min.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <header class="header">
+        <h1>📈 Stock Data Viewer</h1>
+        <p>Real-time stock data for FPT.VN and GOOG</p>
+      </header>
+
+      <div class="controls">
+        <button id="refreshBtn" class="btn btn-primary">🔄 Refresh Data</button>
+        <select id="timeRange" class="select">
+          <option value="1d">1 Day</option>
+          <option value="1w">1 Week</option>
+          <option value="1m">1 Month</option>
+          <option value="3m">3 Months</option>
+        </select>
+      </div>
+
+      <div class="dashboard">
+        <!-- Price Overview Cards -->
+        <div class="overview-cards">
+          <div class="card" id="fpt-card">
+            <h3>FPT.VN</h3>
+            <div class="price-info">
+              <span class="current-price" id="fpt-price">--</span>
+              <span class="change" id="fpt-change">--</span>
+            </div>
+            <div class="additional-info">
+              <p>Volume: <span id="fpt-volume">--</span></p>
+              <p>Market Cap: <span id="fpt-market-cap">--</span></p>
+            </div>
+          </div>
+
+          <div class="card" id="goog-card">
+            <h3>GOOG</h3>
+            <div class="price-info">
+              <span class="current-price" id="goog-price">--</span>
+              <span class="change" id="goog-change">--</span>
+            </div>
+            <div class="additional-info">
+              <p>Volume: <span id="goog-volume">--</span></p>
+              <p>Market Cap: <span id="goog-market-cap">--</span></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="charts-section">
+          <div class="chart-container">
+            <h3>Price Comparison Chart</h3>
+            <canvas id="priceChart"></canvas>
+          </div>
+
+          <div class="chart-container">
+            <h3>Volume Analysis</h3>
+            <canvas id="volumeChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="data-table-section">
+          <h3>Detailed Stock Data</h3>
+          <div class="table-container">
+            <table id="stockTable">
+              <thead>
+                <tr>
+                  <th>Symbol</th>
+                  <th>Price</th>
+                  <th>Change</th>
+                  <th>Volume</th>
+                  <th>Open</th>
+                  <th>High</th>
+                  <th>Low</th>
+                  <th>Market Cap</th>
+                  <th>P/E Ratio</th>
+                  <th>Timestamp</th>
+                </tr>
+              </thead>
+              <tbody id="stockTableBody">
+                <!-- Data will be populated by JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Status and Info -->
+        <div class="status-section">
+          <div class="status-card">
+            <h4>Last Update</h4>
+            <p id="lastUpdate">--</p>
+          </div>
+          <div class="status-card">
+            <h4>Data Provider</h4>
+            <p id="dataProvider">--</p>
+          </div>
+          <div class="status-card">
+            <h4>Sync Status</h4>
+            <p id="syncStatus">--</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="/stock-viewer/static/js"></script>
+  </body>
+</html>

@@ -63,6 +63,8 @@ class StockSyncWorker:
     
     def _is_trading_time(self) -> bool:
         """Check if current time is within trading hours."""
+
+        return True
         now = datetime.now()
         current_time = now.time()
         current_day = now.strftime("%a").lower()[:3]  # Mon, Tue, Wed, etc.
