@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from starlette.responses import RedirectResponse
 import uvicorn
 from contextlib import asynccontextmanager
 from src.database.connection import close_db, init_db
@@ -55,7 +56,7 @@ app.include_router(stock_viewer_router)
 
 @app.get("/")
 async def root():
-    return {"message": "Hello World"}
+    return RedirectResponse(url="/stock-viewer")
 
 @app.get("/health")
 async def health_check():
