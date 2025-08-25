@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class StockSyncWorkerConfig:
     provider: str = "yahoo"
-    frequency_minutes: int = 5
+    frequency_minutes: int = 1
     hour_start: int = 0
     hour_end: int = 16
     except_days: str = "none"

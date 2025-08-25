@@ -12,99 +12,157 @@
     <div class="container">
       <header class="header">
         <h1>📈 Stock Data Viewer</h1>
-        <p>Real-time stock data for FPT.VN and GOOG</p>
+        <p>Real-time stock data</p>
       </header>
 
       <div class="controls">
-        <button id="refreshBtn" class="btn btn-primary">🔄 Refresh Data</button>
-        <select id="timeRange" class="select">
-          <option value="1d">1 Day</option>
-          <option value="1w">1 Week</option>
-          <option value="1m">1 Month</option>
-          <option value="3m">3 Months</option>
-        </select>
+        <div class="tabs" id="symbolTabs">
+          <button class="tab-btn active" data-symbol="FPT.VN">FPT.VN</button>
+          <button class="tab-btn" data-symbol="GOOG">GOOG</button>
+        </div>
+        <div class="actions">
+          <button id="refreshBtn" class="btn btn-primary">
+            🔄 Refresh Data
+          </button>
+          <select id="timeRange" class="select">
+            <option value="1d">1 Day</option>
+            <option value="1w">1 Week</option>
+            <option value="1m">1 Month</option>
+            <option value="3m">3 Months</option>
+          </select>
+        </div>
       </div>
 
       <div class="dashboard">
-        <!-- Price Overview Cards -->
-        <div class="overview-cards">
-          <div class="card" id="fpt-card">
-            <h3>FPT.VN</h3>
-            <div class="price-info">
-              <span class="current-price" id="fpt-price">--</span>
-              <span class="change" id="fpt-change">--</span>
-            </div>
-            <div class="additional-info">
-              <p>Volume: <span id="fpt-volume">--</span></p>
-              <p>Market Cap: <span id="fpt-market-cap">--</span></p>
+        <!-- Tab Panel: FPT.VN -->
+        <div class="tab-panel active" id="panel-FPT.VN">
+          <div class="overview-cards">
+            <div class="card" id="fpt-card">
+              <h3>FPT.VN</h3>
+              <div class="price-info">
+                <span class="current-price" id="fpt-price">--</span>
+                <span class="change" id="fpt-change">--</span>
+              </div>
+              <div class="additional-info">
+                <p>Volume: <span id="fpt-volume">--</span></p>
+                <p>Market Cap: <span id="fpt-market-cap">--</span></p>
+              </div>
             </div>
           </div>
 
-          <div class="card" id="goog-card">
-            <h3>GOOG</h3>
-            <div class="price-info">
-              <span class="current-price" id="goog-price">--</span>
-              <span class="change" id="goog-change">--</span>
+          <div class="charts-section">
+            <div class="chart-container">
+              <h3>Price Chart</h3>
+              <canvas id="priceChart-FPT.VN"></canvas>
             </div>
-            <div class="additional-info">
-              <p>Volume: <span id="goog-volume">--</span></p>
-              <p>Market Cap: <span id="goog-market-cap">--</span></p>
+            <div class="chart-container">
+              <h3>Volume</h3>
+              <canvas id="volumeChart-FPT.VN"></canvas>
+            </div>
+          </div>
+
+          <div class="data-table-section">
+            <h3>Detailed Stock Data</h3>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Symbol</th>
+                    <th>Price</th>
+                    <th>Change</th>
+                    <th>Volume</th>
+                    <th>Open</th>
+                    <th>High</th>
+                    <th>Low</th>
+                    <th>Market Cap</th>
+                    <th>P/E Ratio</th>
+                    <th>Timestamp</th>
+                  </tr>
+                </thead>
+                <tbody id="stockTableBody-FPT.VN"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="status-section">
+            <div class="status-card">
+              <h4>Last Update</h4>
+              <p id="lastUpdate-FPT.VN">--</p>
+            </div>
+            <div class="status-card">
+              <h4>Data Provider</h4>
+              <p id="dataProvider-FPT.VN">--</p>
+            </div>
+            <div class="status-card">
+              <h4>Sync Status</h4>
+              <p id="syncStatus-FPT.VN">--</p>
             </div>
           </div>
         </div>
 
-        <!-- Charts Section -->
-        <div class="charts-section">
-          <div class="chart-container">
-            <h3>Price Comparison Chart</h3>
-            <canvas id="priceChart"></canvas>
+        <!-- Tab Panel: GOOG -->
+        <div class="tab-panel" id="panel-GOOG">
+          <div class="overview-cards">
+            <div class="card" id="goog-card">
+              <h3>GOOG</h3>
+              <div class="price-info">
+                <span class="current-price" id="goog-price">--</span>
+                <span class="change" id="goog-change">--</span>
+              </div>
+              <div class="additional-info">
+                <p>Volume: <span id="goog-volume">--</span></p>
+                <p>Market Cap: <span id="goog-market-cap">--</span></p>
+              </div>
+            </div>
           </div>
 
-          <div class="chart-container">
-            <h3>Volume Analysis</h3>
-            <canvas id="volumeChart"></canvas>
+          <div class="charts-section">
+            <div class="chart-container">
+              <h3>Price Chart</h3>
+              <canvas id="priceChart-GOOG"></canvas>
+            </div>
+            <div class="chart-container">
+              <h3>Volume</h3>
+              <canvas id="volumeChart-GOOG"></canvas>
+            </div>
           </div>
-        </div>
 
-        <!-- Data Table -->
-        <div class="data-table-section">
-          <h3>Detailed Stock Data</h3>
-          <div class="table-container">
-            <table id="stockTable">
-              <thead>
-                <tr>
-                  <th>Symbol</th>
-                  <th>Price</th>
-                  <th>Change</th>
-                  <th>Volume</th>
-                  <th>Open</th>
-                  <th>High</th>
-                  <th>Low</th>
-                  <th>Market Cap</th>
-                  <th>P/E Ratio</th>
-                  <th>Timestamp</th>
-                </tr>
-              </thead>
-              <tbody id="stockTableBody">
-                <!-- Data will be populated by JavaScript -->
-              </tbody>
-            </table>
+          <div class="data-table-section">
+            <h3>Detailed Stock Data</h3>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Symbol</th>
+                    <th>Price</th>
+                    <th>Change</th>
+                    <th>Volume</th>
+                    <th>Open</th>
+                    <th>High</th>
+                    <th>Low</th>
+                    <th>Market Cap</th>
+                    <th>P/E Ratio</th>
+                    <th>Timestamp</th>
+                  </tr>
+                </thead>
+                <tbody id="stockTableBody-GOOG"></tbody>
+              </table>
+            </div>
           </div>
-        </div>
 
-        <!-- Status and Info -->
-        <div class="status-section">
-          <div class="status-card">
-            <h4>Last Update</h4>
-            <p id="lastUpdate">--</p>
-          </div>
-          <div class="status-card">
-            <h4>Data Provider</h4>
-            <p id="dataProvider">--</p>
-          </div>
-          <div class="status-card">
-            <h4>Sync Status</h4>
-            <p id="syncStatus">--</p>
+          <div class="status-section">
+            <div class="status-card">
+              <h4>Last Update</h4>
+              <p id="lastUpdate-GOOG">--</p>
+            </div>
+            <div class="status-card">
+              <h4>Data Provider</h4>
+              <p id="dataProvider-GOOG">--</p>
+            </div>
+            <div class="status-card">
+              <h4>Sync Status</h4>
+              <p id="syncStatus-GOOG">--</p>
+            </div>
           </div>
         </div>
       </div>

@@ -50,7 +50,7 @@ class Settings(BaseSettings):
     resource_dir: str = "blob"
     
     # Stock sync worker settings
-    frequency_minutes: int = 5
+    frequency_minutes: int = 1
     hour_start: int = 0
     hour_end: int = 23
     except_days: str = "none"

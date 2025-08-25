@@ -45,6 +45,33 @@ body {
   align-items: center;
 }
 
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.tab-btn {
+  padding: 10px 16px;
+  border: 1px solid #ecf0f1;
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.tab-btn.active {
+  background: #4caf50;
+  color: white;
+  border-color: #4caf50;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+}
+
 .btn {
   padding: 12px 24px;
   border: none;
@@ -85,6 +112,18 @@ body {
 .dashboard {
   display: grid;
   gap: 30px;
+}
+
+.tab-panel {
+  display: none;
+}
+
+.tab-panel > div {
+  margin-bottom: 20px;
+}
+
+.tab-panel.active {
+  display: block;
 }
 
 /* Overview Cards */
@@ -261,6 +300,16 @@ tr:hover {
   .controls {
     flex-direction: column;
     gap: 10px;
+  }
+
+  .tabs {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .actions {
+    width: 100%;
+    justify-content: center;
   }
 
   .overview-cards {
