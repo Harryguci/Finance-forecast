@@ -98,6 +98,25 @@ async def get_js():
         logger.error(f"Error serving JavaScript file: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to serve JavaScript file")
 
+@router.get("/static/theme.js")
+async def get_theme_js():
+    """Serve the theme JavaScript file"""
+    try:
+        pages_dir = Path(__file__).parent.parent / "pages"
+        theme_js_file = pages_dir / "theme.js"
+        
+        if not theme_js_file.exists():
+            raise HTTPException(status_code=404, detail="Theme JavaScript file not found")
+        
+        with open(theme_js_file, 'r', encoding='utf-8') as f:
+            theme_js_content = f.read()
+        
+        return Response(content=theme_js_content, media_type="application/javascript")
+        
+    except Exception as e:
+        logger.error(f"Error serving theme JavaScript file: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to serve theme JavaScript file")
+
 @router.get("/api/stock-data")
 async def get_stock_data(
     symbols: Optional[str] = Query(None, description="Comma-separated list of stock symbols"),
