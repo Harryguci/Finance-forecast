@@ -35,7 +35,7 @@ stock_data_service = StockDataService()
 yahoo_service = YahooStockApiService()
 
 # Define the symbols we're tracking
-TRACKED_SYMBOLS = ['FPT.VN', 'GOOG']
+TRACKED_SYMBOLS = ['FPT.VN', 'GOOG', 'SSI.VN']
 
 @router.get("/", response_class=HTMLResponse)
 async def get_stock_viewer_page():
@@ -101,17 +101,18 @@ async def get_js():
 @router.get("/api/stock-data")
 async def get_stock_data(
     symbols: Optional[str] = Query(None, description="Comma-separated list of stock symbols"),
-    time_range: str = Query("1d", description="Time range: 1d, 1w, 1m, 3m")
+    time_range: str = Query("1d", description="Time range: 1d, 1w, 1m, 3m"),
+    limit: Optional[int] = Query(None, ge=1, description="Max historical records per symbol to return")
 ):
     """
-    Get current stock data for tracked symbols
+    Get all historical stock data for tracked symbols
     
     Args:
         symbols: Optional comma-separated list of symbols (defaults to tracked symbols)
         time_range: Time range for data retrieval
         
     Returns:
-        dict: Stock data for requested symbols
+        dict: All historical stock data for requested symbols
     """
     try:
         # Use provided symbols or default to tracked symbols
@@ -120,43 +121,52 @@ async def get_stock_data(
         else:
             symbol_list = TRACKED_SYMBOLS
         
-        logger.info(f"Fetching stock data for symbols: {symbol_list}")
+        logger.info(f"Fetching all historical stock data for symbols: {symbol_list}")
         
-        # Get data from database first (most recent)
-        db_data = await get_latest_stock_data_from_db(symbol_list)
+        # Get all historical data from database
+        db_data = await get_all_stock_data_from_db(symbol_list, limit=limit)
         
         # If we don't have recent data, fetch from Yahoo API
         current_time = datetime.now(timezone.utc)
         data_to_return = {}
         
         for symbol in symbol_list:
-            if symbol in db_data:
-                # Check if data is recent (within last 5 minutes)
-                data_age = current_time - db_data[symbol].timestamp
+            if symbol in db_data and db_data[symbol]:
+                # Convert all historical records to dictionaries
+                data_to_return[symbol] = [convert_stock_data_to_dict(record) for record in db_data[symbol]]
+                
+                # Check if we have recent data (within last 5 minutes)
+                latest_record = db_data[symbol][0]  # First record is most recent due to desc ordering
+                data_age = current_time - latest_record.timestamp
                 if data_age.total_seconds() < 300:  # 5 minutes
-                    data_to_return[symbol] = convert_stock_data_to_dict(db_data[symbol])
                     continue
             
-            # Fetch fresh data from Yahoo API
+            # Fetch fresh data from Yahoo API if we don't have recent data
             try:
                 fresh_data = yahoo_service.get(symbol)
-                data_to_return[symbol] = convert_stock_data_to_dict(fresh_data)
+                fresh_dict = convert_stock_data_to_dict(fresh_data)
                 
                 # Save to database
                 stock_data_service.save_stock_data(
-                    convert_stock_data_to_dict(fresh_data),
+                    fresh_dict,
                     provider="yahoo"
                 )
+                
+                # Add fresh data to the beginning of the list
+                if symbol in data_to_return:
+                    data_to_return[symbol].insert(0, fresh_dict)
+                else:
+                    data_to_return[symbol] = [fresh_dict]
                 
             except Exception as e:
                 logger.warning(f"Failed to fetch fresh data for {symbol}: {str(e)}")
                 # Use database data if available, even if old
-                if symbol in db_data:
-                    data_to_return[symbol] = convert_stock_data_to_dict(db_data[symbol])
-                else:
-                    data_to_return[symbol] = create_error_stock_data(symbol, str(e))
+                if symbol not in data_to_return and symbol in db_data:
+                    data_to_return[symbol] = [convert_stock_data_to_dict(record) for record in db_data[symbol]]
+                elif symbol not in data_to_return:
+                    data_to_return[symbol] = [create_error_stock_data(symbol, str(e))]
         
-        logger.info(f"Successfully retrieved stock data for {len(data_to_return)} symbols")
+        logger.info(f"Successfully retrieved historical stock data for {len(data_to_return)} symbols")
         return {
             "data": data_to_return,
             "timestamp": current_time.isoformat(),
@@ -360,6 +370,32 @@ async def get_latest_stock_data_from_db(symbols: List[str]) -> Dict[str, StockDa
         
     except Exception as e:
         logger.error(f"Error getting data from database: {str(e)}")
+        return {}
+    finally:
+        if session:
+            session.close()
+
+async def get_all_stock_data_from_db(symbols: List[str], limit: Optional[int] = 50) -> Dict[str, List[StockData]]:
+    """Get historical stock data from database for given symbols with optional limit per symbol"""
+    try:
+        session = next(get_db_session())
+        
+        all_data = {}
+        for symbol in symbols:
+            query = session.query(StockData)\
+                .filter(StockData.symbol == symbol)\
+                .order_by(desc(StockData.timestamp))
+            if limit is not None:
+                query = query.limit(limit)
+            historical_records = query.all()
+            
+            if historical_records:
+                all_data[symbol] = historical_records
+        
+        return all_data
+        
+    except Exception as e:
+        logger.error(f"Error getting historical data from database: {str(e)}")
         return {}
     finally:
         if session:

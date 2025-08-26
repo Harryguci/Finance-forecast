@@ -59,7 +59,7 @@ class Settings(BaseSettings):
     yahoo_finance_base_url: str = "https://finance.yahoo.com"
     
     # stock symbols
-    stock_symbols: List[str] = ["FPT.VN", "GOOG"]
+    stock_symbols: List[str] = ["FPT.VN", "GOOG", "SSI.VN"]
 
     class Config:
         env_file = ".env"
